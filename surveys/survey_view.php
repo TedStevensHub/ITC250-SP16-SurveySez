@@ -29,20 +29,10 @@ $sql = "select Title,Description from sp16_surveys where SurveyID = " . $myID;
 
 $foundRecord = FALSE; # Will change to true, if record found!
    
-# connection comes first in mysqli (improved) function
-$result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+//put class code here
+$mySurvey = new Survey($myID);
 
-if(mysqli_num_rows($result) > 0)
-{#records exist - process
-	   $foundRecord = TRUE;	
-	   while ($row = mysqli_fetch_assoc($result))
-	   {
-			$Title = dbOut($row['Title']);
-			$Description = dbOut($row['Description']);
-	   }
-}
-
-@mysqli_free_result($result); # We're done with the data!
+dumpDie($mySurvey);
 
 if($foundRecord)
 {#only load data if record found
@@ -64,7 +54,7 @@ $config->nav1 = array("page.php"=>"New Page!") + $config->nav1; #add a new page 
 
 get_header(); #defaults to theme header or header_inc.php
 ?>
-<h3 align="center"><?=$Title;?></h3>
+
 
 
 <?php
@@ -76,11 +66,40 @@ if($foundRecord)
     
     
     
+    
     ';
 }else{//no such muffin!
-    echo '<div align="center">What! No such survey.</div>';
+    echo '<div align="center">No survey found.</div>';
     echo '<div align="center"><a href="' . VIRTUAL_PATH . 'surveys/index.php">Back</a></div>';
 }
 
 get_footer(); #defaults to theme footer or footer_inc.php
-?>
+
+class Survey {
+    public $Title = '';
+    public $Description = '';
+    public $SurveyID = 0;
+    public $isValid = false;
+    
+    function __construct($id) {
+        
+        //forcibly cast data to an integer
+        $id = (int)$id;
+        $sql = "select Title,Description from sp16_surveys where SurveyID = " . $id;
+        
+                # connection comes first in mysqli (improved) function
+        $result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+
+        if(mysqli_num_rows($result) > 0)
+        {#records exist - process
+               $this->isValid = true;//survey exists
+               while ($row = mysqli_fetch_assoc($result))
+               {
+                    $this->Title = dbOut($row['Title']);
+                    $this->Description = dbOut($row['Description']);
+               }
+        }
+
+        @mysqli_free_result($result); # We're done with the data!
+    }//end survey constructor
+}//end survey class
